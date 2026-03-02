@@ -1,0 +1,5 @@
+{
+  "name": "BSA Kit - MCP Connections",
+  "description": "Manage integrations with external MCP servers",
+  "requestFramePermissions": []
+}

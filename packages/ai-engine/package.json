@@ -1,0 +1,25 @@
+{
+    "name": "@bsa-kit/ai-engine",
+    "version": "0.1.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc --incremental false",
+        "dev": "tsc --watch",
+        "type-check": "tsc --noEmit",
+        "clean": "rm -rf dist",
+        "lint": "echo 'no lint configured yet'",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.77.0",
+        "@bsa-kit/shared": "workspace:*",
+        "@google/genai": "^1.41.0",
+        "typescript": "^5.7.0"
+    },
+    "devDependencies": {
+        "vitest": "^4.0.18"
+    }
+}

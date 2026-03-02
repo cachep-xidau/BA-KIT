@@ -1,0 +1,180 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
+  prdContent         String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  features           Feature[]
+  connections        MCPConnection[]
+  analysisDocuments  AnalysisDocument[]
+  artifacts          Artifact[]
+  payments           Payment[]
+}
+
+model AnalysisDocument {
+  id        String   @id @default(cuid())
+  type      String   // brainstorm | market-research | domain-research | technical-research | product-brief
+  title     String
+  content   String   @default("")
+  status    String   @default("draft") // draft | completed
+  metadata  String?  // JSON: { topic, goals, chatHistory, stepsDone }
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([type])
+}
+
+model Feature {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  order       Int        @default(0)
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  functions   Function[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([projectId])
+}
+
+model Function {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  order       Int        @default(0)
+  featureId   String
+  feature     Feature    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  artifacts   Artifact[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([featureId])
+}
+
+model Artifact {
+  id         String     @id @default(cuid())
+  type       String     // epic, user-story, function-list, srs, erd, sql
+  title      String     @default("")
+  content    String
+  version    Int        @default(1)
+  status     String     @default("current") // current | archived
+  sourceHash String?    // MD5 hash of PRD at generation time
+  functionId String?
+  function   Function?  @relation(fields: [functionId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  epicId     String?    // story belongs to epic
+  epic       Artifact?  @relation("EpicStories", fields: [epicId], references: [id], onDelete: Cascade)
+  stories    Artifact[] @relation("EpicStories")
+  storyId        String?    // technical artifact belongs to story
+  parentStory    Artifact?  @relation("StoryArtifacts", fields: [storyId], references: [id], onDelete: Cascade)
+  storyArtifacts Artifact[] @relation("StoryArtifacts")
+  archivedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([functionId])
+  @@index([projectId])
+  @@index([epicId])
+  @@index([storyId])
+  @@index([type])
+  @@index([status])
+}
+
+model MCPConnection {
+  id        String   @id @default(cuid())
+  name      String   // user-defined display name
+  type      String   // figma, confluence
+  config    String   // encrypted JSON
+  status    String   @default("disconnected")
+  toolCount Int      @default(0)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, type, name])
+  @@index([projectId])
+}
+
+model MCPActivityLog {
+  id        String   @id @default(cuid())
+  source    String   // figma, github, jira, linear, sentry, etc.
+  action    String   // "Connected 'BSA-upfit'", "Disconnected", "Test failed (403)"
+  status    String   // success, error, info
+  details   String?  // optional extra context
+  createdAt DateTime @default(now())
+
+  @@index([source])
+  @@index([createdAt])
+}
+
+model Skill {
+  id            String   @id @default(cuid())
+  name          String
+  description   String   @default("")
+  type          String   // skill | workflow | agent
+  category      String   // analysis | prd | artifact | utility | advisor
+  icon          String   @default("Zap")
+  triggerType   String   // navigate | modal | chat
+  triggerConfig String   @default("{}")  // JSON: { route, tab, action, type, systemPrompt }
+  enabled       Boolean  @default(true)
+  builtIn       Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([category])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  // SePay transaction data
+  sepayTxId      Int      @unique
+  gateway        String
+  accountNumber  String
+  transferType   String
+  amount         Float
+  content        String?
+  referenceCode  String?
+
+  // Internal tracking
+  status         String   @default("completed")
+  rawPayload     String?
+  processedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([status])
+  @@index([projectId])
+  @@index([sepayTxId])
+}
+
+model UserPlan {
+  id               String   @id @default("default")
+  tier             String   @default("free")       // free | pro | team
+  billingCycle     String   @default("monthly")    // monthly | annual
+  creditsRemaining Int      @default(30)
+  creditsAddon     Int      @default(0)            // purchased credits (never expire)
+  chatUsedToday    Int      @default(0)
+  batchTrialUsed   Boolean  @default(false)
+  renewalDate      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

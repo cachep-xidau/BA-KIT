@@ -1,0 +1,47 @@
+{
+    "name": "@bsa-kit/api",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "prisma generate && tsc --incremental false",
+        "build:render": "cd ../.. && cd packages/shared && rm -rf dist tsconfig.tsbuildinfo && npx tsc && cd ../ai-engine && rm -rf dist tsconfig.tsbuildinfo && npx tsc && cd ../../apps/api && npx prisma generate && rm -rf dist tsconfig.tsbuildinfo && npx tsc",
+        "start": "node dist/index.js",
+        "type-check": "tsc --noEmit",
+        "clean": "rm -rf dist",
+        "lint": "echo 'no lint configured yet'",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "prisma:generate": "prisma generate",
+        "prisma:migrate": "prisma migrate dev",
+        "prisma:studio": "prisma studio"
+    },
+    "dependencies": {
+        "@bsa-kit/ai-engine": "workspace:*",
+        "@bsa-kit/shared": "workspace:*",
+        "@libsql/client": "^0.17.0",
+        "@modelcontextprotocol/sdk": "^1.26.0",
+        "@prisma/adapter-libsql": "^7.4.1",
+        "@prisma/client": "^7.4.1",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.0.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.0",
+        "express": "^5.0.1",
+        "express-rate-limit": "^8.2.1",
+        "helmet": "^8.0.0",
+        "prisma": "^7.4.1",
+        "sepay-pg-node": "^1.0.0",
+        "typescript": "^5.7.0",
+        "zod": "^3.24.0"
+    },
+    "devDependencies": {
+        "@types/supertest": "^6.0.3",
+        "@vitest/coverage-v8": "^4.0.18",
+        "supertest": "^7.2.2",
+        "tsx": "^4.19.0",
+        "vitest": "^4.0.18"
+    }
+}
